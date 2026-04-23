@@ -14,5 +14,7 @@ def verify_code_exists(code):
     conn = sqlite3.connect("banco.db")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT 1 FROM links WHERE code = ?", (code,))
-    return cursor.fetchone() 
+    cursor.execute("SELECT * FROM links WHERE code = ?", (code,))
+    result = cursor.fetchone()
+    conn.close()
+    return result 
