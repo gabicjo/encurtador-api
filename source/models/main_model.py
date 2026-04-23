@@ -1,6 +1,8 @@
 import sqlite3
 
-conn = sqlite3.connect("banco.db")
+BANCO_PATH = "banco.db"
+
+conn = sqlite3.connect(BANCO_PATH)
 cursor = conn.cursor()
 
 def criar_tabela():
@@ -11,7 +13,7 @@ def criar_tabela():
         )""")
 
 def verify_code_exists(code):
-    conn = sqlite3.connect("banco.db")
+    conn = sqlite3.connect(BANCO_PATH)
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM links WHERE code = ?", (code,))
