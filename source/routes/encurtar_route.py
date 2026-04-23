@@ -11,6 +11,8 @@ def generate_code():
     try:
         if "url" in data:
             if data['url'] not in [None, ""]:
+                if not data['url'].startswith("https://") and not data['url'].startswith("http://"):
+                    raise error_handler.URLInvalido("O URL deve iniciar com http:// ou https://")
                 create_shortlink(data['url'])
                 return jsonify({"message": "ok"})
 
@@ -18,8 +20,8 @@ def generate_code():
 
         raise error_handler.SemURL("URL não foi enviado")
 
-    except error_handler.SemURL:
-        return jsonify({"message": "URL não foi enviado"}), 400
+    except error_handler.SemURL as e:
+        return jsonify({"message": str(e)}), 400
 
-    except error_handler.URLInvalido:
-        return jsonify({"message": "O URL recebido é invalido"}), 400
+    except error_handler.URLInvalido as e:
+        return jsonify({"message": str(e)}), 400
