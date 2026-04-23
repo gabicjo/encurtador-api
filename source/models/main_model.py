@@ -9,7 +9,3 @@ def criar_tabela():
         url VARCHAR(200) NOT NULL,
         code VARCHAR(30) NOT NULL UNIQUE
         )""")
-
-
-
-conn.commit()
