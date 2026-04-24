@@ -12,7 +12,8 @@ def test_db(tmp_path):
     cursor.execute("""CREATE TABLE IF NOT EXISTS links (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         url VARCHAR(200) NOT NULL,
-        code VARCHAR(30) NOT NULL UNIQUE
+        code VARCHAR(30) NOT NULL UNIQUE,
+        clicks INTEGER NOT NULL DEFAULT 0
     )""")
     conn.commit()
     conn.close()
