@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from source.services.encurtar_service import create_shortlink
 from source import error_handler
-import sys
 
 encurtar_bp = Blueprint("encurtar", __name__)
 
