@@ -9,10 +9,11 @@ def test_db_path(tmp_path):
     conn = sqlite3.connect(str(db_path))
     cursor = conn.cursor()
     cursor.execute("""CREATE TABLE IF NOT EXISTS links (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        url VARCHAR(200) NOT NULL,
-        code VARCHAR(30) NOT NULL UNIQUE
-    )""")
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url VARCHAR(200) NOT NULL,
+            code VARCHAR(30) NOT NULL UNIQUE,
+            clicks INTEGER NOT NULL DEFAULT 0
+        )""")
     conn.commit()
     conn.close()
     return db_path
@@ -78,3 +79,51 @@ class TestRedirectRoute:
     def test_returns_404_for_nonexistent_code(self, client):
         response = client.get("/nonexistent")
         assert response.status_code == 404
+
+    def test_redirect_increments_click_count(self, client, test_db_path, monkeypatch):
+        import source.models.main_model as main_model
+        import source.models.redirect_model as redirect_model
+        monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
+        monkeypatch.setattr(redirect_model, "BANCO_PATH", str(test_db_path))
+
+        import sqlite3
+        conn = sqlite3.connect(str(test_db_path))
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO links (url, code, clicks) VALUES (?, ?, ?)", ("https://example.com", "test123", 0))
+        conn.commit()
+        conn.close()
+
+        client.get("/test123")
+
+        conn = sqlite3.connect(str(test_db_path))
+        cursor = conn.cursor()
+        cursor.execute("SELECT clicks FROM links WHERE code = ?", ("test123",))
+        result = cursor.fetchone()
+        conn.close()
+
+        assert result[0] == 1
+
+    def test_multiple_redirects_increment_clicks(self, client, test_db_path, monkeypatch):
+        import source.models.main_model as main_model
+        import source.models.redirect_model as redirect_model
+        monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
+        monkeypatch.setattr(redirect_model, "BANCO_PATH", str(test_db_path))
+
+        import sqlite3
+        conn = sqlite3.connect(str(test_db_path))
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO links (url, code, clicks) VALUES (?, ?, ?)", ("https://example.com", "test456", 0))
+        conn.commit()
+        conn.close()
+
+        client.get("/test456")
+        client.get("/test456")
+        client.get("/test456")
+
+        conn = sqlite3.connect(str(test_db_path))
+        cursor = conn.cursor()
+        cursor.execute("SELECT clicks FROM links WHERE code = ?", ("test456",))
+        result = cursor.fetchone()
+        conn.close()
+
+        assert result[0] == 3
