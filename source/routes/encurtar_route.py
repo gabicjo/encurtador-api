@@ -1,8 +1,21 @@
 from flask import Blueprint, request, jsonify
 from source.services.encurtar_service import create_shortlink
 from source import error_handler
+import sys
 
 encurtar_bp = Blueprint("encurtar", __name__)
+
+
+def _get_base_url():
+    host = request.host
+    if request.host[0] == '[':
+        host_without_port = host.split(']:')[0] + ']'
+    elif ':' in host:
+        host_without_port = host.split(':')[0]
+    else:
+        host_without_port = host
+    return f"{request.scheme}://{host_without_port}"
+
 
 @encurtar_bp.route("/encurtar", methods=["POST"])
 def generate_code():
@@ -11,10 +24,9 @@ def generate_code():
     try:
         if "url" in data:
             if data['url'] not in [None, ""]:
-                if not data['url'].startswith("https://") and not data['url'].startswith("http://"):
-                    raise error_handler.URLInvalido("O URL deve iniciar com http:// ou https://")
-                create_shortlink(data['url'])
-                return jsonify({"message": "ok"})
+                code = create_shortlink(data['url'])
+                base_url = _get_base_url()
+                return jsonify({"url": f"{base_url}/{code}"})
 
             raise error_handler.URLInvalido("O URL recebido é invalido")
 
