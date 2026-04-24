@@ -43,11 +43,8 @@ def test_app(test_db_path, monkeypatch):
 
 @pytest.fixture
 def client(test_app, test_db_path, monkeypatch):
-    import sqlite3
-    
-    monkeypatch.setattr("source.models.encurtar_model.sqlite3", __import__("sqlite3"))
-    monkeypatch.setattr("source.models.main_model.sqlite3", __import__("sqlite3"))
-    monkeypatch.setattr("source.models.main_model.BANCO_PATH", str(test_db_path))
+    import source.models.main_model as main_model
+    monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
     
     with test_app.test_client() as client:
         yield client
