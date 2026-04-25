@@ -127,3 +127,129 @@ class TestRedirectRoute:
         conn.close()
 
         assert result[0] == 3
+
+
+class TestCustomCode:
+    """Testes para códigos personalizados"""
+
+    def test_creates_shortlink_with_custom_code(self, client, test_db_path, monkeypatch):
+        """Deve criar link com código personalizado válido"""
+        import source.models.main_model as main_model
+        import source.models.encurtar_model as encurtar_model
+        monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
+        monkeypatch.setattr(encurtar_model, "BANCO_PATH", str(test_db_path))
+
+        response = client.post("/encurtar", json={
+            "url": "https://example.com",
+            "code": "custom"
+        })
+        assert response.status_code == 200
+
+    def test_creates_shortlink_with_numeric_code(self, client, test_db_path, monkeypatch):
+        """Deve criar link com código numérico"""
+        import source.models.main_model as main_model
+        import source.models.encurtar_model as encurtar_model
+        monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
+        monkeypatch.setattr(encurtar_model, "BANCO_PATH", str(test_db_path))
+
+        response = client.post("/encurtar", json={
+            "url": "https://test.com",
+            "code": "12345"
+        })
+        assert response.status_code == 200
+        data = response.get_json()
+        assert "12345" in data["url"]
+
+    def test_returns_400_for_code_less_than_3_characters(self, client, test_db_path, monkeypatch):
+        """Deve retornar 400 para código com menos de 3 caracteres"""
+        import source.models.main_model as main_model
+        import source.models.encurtar_model as encurtar_model
+        monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
+        monkeypatch.setattr(encurtar_model, "BANCO_PATH", str(test_db_path))
+
+        response = client.post("/encurtar", json={
+            "url": "https://example.com",
+            "code": "ab"
+        })
+        assert response.status_code == 400
+        assert "3" in response.get_json()["message"]
+
+    def test_returns_400_for_code_with_exactly_3_characters(self, client, test_db_path, monkeypatch):
+        """Deve aceitar código com exatamente 3 caracteres"""
+        import source.models.main_model as main_model
+        import source.models.encurtar_model as encurtar_model
+        monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
+        monkeypatch.setattr(encurtar_model, "BANCO_PATH", str(test_db_path))
+
+        response = client.post("/encurtar", json={
+            "url": "https://example.com",
+            "code": "abc"
+        })
+        assert response.status_code == 200
+
+    def test_returns_400_for_duplicate_custom_code(self, client, test_db_path, monkeypatch):
+        """Deve retornar erro para código duplicado"""
+        import source.models.main_model as main_model
+        import source.models.encurtar_model as encurtar_model
+        import sqlite3
+        monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
+        monkeypatch.setattr(encurtar_model, "BANCO_PATH", str(test_db_path))
+
+        # Insere um link primeiro
+        conn = sqlite3.connect(str(test_db_path))
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO links (url, code, clicks) VALUES (?, ?, ?)",
+                      ("https://first.com", "existe", 0))
+        conn.commit()
+        conn.close()
+
+        # Tenta criar outro com o mesmo código
+        response = client.post("/encurtar", json={
+            "url": "https://second.com",
+            "code": "existe"
+        })
+        assert response.status_code == 400
+
+    def test_custom_code_in_response_url(self, client, test_db_path, monkeypatch):
+        """O código personalizado deve aparecer na URL de resposta"""
+        import source.models.main_model as main_model
+        import source.models.encurtar_model as encurtar_model
+        monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
+        monkeypatch.setattr(encurtar_model, "BANCO_PATH", str(test_db_path))
+
+        response = client.post("/encurtar", json={
+            "url": "https://example.com",
+            "code": "meulink"
+        })
+        assert response.status_code == 200
+        data = response.get_json()
+        assert "/meulink" in data["url"]
+
+    def test_without_custom_code_uses_generated_code(self, client, test_db_path, monkeypatch):
+        """Sem código personalizado, deve gerar automaticamente"""
+        import source.models.main_model as main_model
+        import source.models.encurtar_model as encurtar_model
+        monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
+        monkeypatch.setattr(encurtar_model, "BANCO_PATH", str(test_db_path))
+
+        response = client.post("/encurtar", json={
+            "url": "https://example.com"
+        })
+        assert response.status_code == 200
+        data = response.get_json()
+        # Código gerado deve ter 10 caracteres
+        code = data["url"].split("/")[-1]
+        assert len(code) == 10
+
+    def test_custom_code_with_mixed_characters(self, client, test_db_path, monkeypatch):
+        """Deve aceitar código com caracteres mistos"""
+        import source.models.main_model as main_model
+        import source.models.encurtar_model as encurtar_model
+        monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
+        monkeypatch.setattr(encurtar_model, "BANCO_PATH", str(test_db_path))
+
+        response = client.post("/encurtar", json={
+            "url": "https://mixed.com",
+            "code": "Test123"
+        })
+        assert response.status_code == 200
