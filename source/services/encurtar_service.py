@@ -21,6 +21,15 @@ def create_shortlink(url):
     else:
         raise error_handler.URLInvalido("URL sem protocolo http:// ou https://")
 
+def create_custom_shortlink(url, code):
+    if verify_valid_url(url):
+        if verify_code_exists(code) == None:
+            encurtar_model.save_new_url(url, code)
+            return code
+        raise error_handler.CodigoInvalido("O codigo enviado já existe")
+    else:
+        raise error_handler.URLInvalido("URL sem protocolo http:// ou https://")
+
 def verify_valid_url(url):
     valid_url_protocol = ['https://', "http://"]
     for protocol in valid_url_protocol:
