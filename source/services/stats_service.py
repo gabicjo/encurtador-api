@@ -1,7 +1,7 @@
 from source.models.main_model import verify_code_exists
 from source import error_handler
 
-def get_url_stats(code):
+def get_url_stats(code: str) -> dict:
     url_data = verify_code_exists(code)
     if url_data:
         return {

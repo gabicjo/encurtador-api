@@ -2,7 +2,7 @@ import sqlite3
 from source.models import main_model
 
 
-def add_new_click(code):
+def add_new_click(code: str) -> None:
     conn = sqlite3.connect(main_model.BANCO_PATH)
     cursor = conn.cursor()
 

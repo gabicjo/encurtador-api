@@ -5,7 +5,7 @@ from source import error_handler
 encurtar_bp = Blueprint("encurtar", __name__)
 
 
-def _get_base_url():
+def _get_base_url() -> str:
     host = request.host
     if request.host[0] == '[':
         host_without_port = host.split(']:')[0] + ']'
@@ -17,7 +17,7 @@ def _get_base_url():
 
 
 @encurtar_bp.route("/encurtar", methods=["POST"])
-def generate_code():
+def generate_code() -> dict:
     data = request.json
 
     try:

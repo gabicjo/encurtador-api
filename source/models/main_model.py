@@ -3,7 +3,7 @@ import sqlite3
 BANCO_PATH = "banco.db"
 
 
-def criar_tabela():
+def criar_tabela() -> None:
     conn = sqlite3.connect(BANCO_PATH)
     cursor = conn.cursor()
     cursor.execute("""CREATE TABLE IF NOT EXISTS links (
@@ -12,11 +12,12 @@ def criar_tabela():
         code VARCHAR(30) NOT NULL UNIQUE,
         clicks INTEGER NOT NULL DEFAULT 0
         )""")
+
     conn.commit()
     conn.close()
 
 
-def verify_code_exists(code):
+def verify_code_exists(code: str) -> tuple:
     conn = sqlite3.connect(BANCO_PATH)
     cursor = conn.cursor()
 
