@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from source.services.encurtar_service import create_shortlink
+from source.services import encurtar_service
 from source import error_handler
 
 encurtar_bp = Blueprint("encurtar", __name__)
@@ -23,16 +23,26 @@ def generate_code():
     try:
         if "url" in data:
             if data['url'] not in [None, ""]:
-                code = create_shortlink(data['url'])
+                if "code" in data:
+                    if len(data['code']) >= 3:
+                        code = encurtar_service.create_custom_shortlink(data['url'], data['code'])
+                    else:
+                        raise error_handler.CodigoInvalido("O codigo precisa ter pelo menos 3 caracteres")
+
+                else:
+                    code = encurtar_service.create_shortlink(data['url'])
+
                 base_url = _get_base_url()
+
                 return jsonify({"url": f"{base_url}/{code}"})
-
             raise error_handler.URLInvalido("O URL recebido é invalido")
-
         raise error_handler.SemURL("URL não foi enviado")
 
     except error_handler.SemURL as e:
         return jsonify({"message": str(e)}), 400
 
     except error_handler.URLInvalido as e:
+        return jsonify({"message": str(e)}), 400
+    
+    except error_handler.CodigoInvalido as e:
         return jsonify({"message": str(e)}), 400
