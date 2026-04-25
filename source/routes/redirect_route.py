@@ -1,5 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect, abort
-from source import error_handler
+from flask import Blueprint, redirect, abort
 from source.models.main_model import verify_code_exists
 from source.services import redirect_service
 

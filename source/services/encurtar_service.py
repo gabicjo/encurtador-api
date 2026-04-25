@@ -1,6 +1,7 @@
-from source.models.main_model import verify_code_exists
+import random
+import string
 from source.models import encurtar_model
-import random, string
+from source.models.main_model import verify_code_exists
 from source import error_handler
 
 def generate_new_code(tamanho: int = 10) -> str:

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect, abort
+from flask import Blueprint, jsonify
 from source import error_handler
 from source.services import stats_service
 
