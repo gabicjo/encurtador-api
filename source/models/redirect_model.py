@@ -6,10 +6,7 @@ BANCO_PATH = main_model.BANCO_PATH
 
 
 def add_new_click(code: str) -> None:
-    conn = sqlite3.connect(BANCO_PATH)
-    cursor = conn.cursor()
+    with sqlite3.connect(BANCO_PATH) as conn:
+        cursor = conn.cursor()
 
-    cursor.execute("UPDATE links SET clicks = clicks + 1 WHERE code = ?", (code,))
-
-    conn.commit()
-    conn.close()
+        cursor.execute("UPDATE links SET clicks = clicks + 1 WHERE code = ?", (code,))
