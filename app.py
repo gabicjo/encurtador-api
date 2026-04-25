@@ -14,4 +14,4 @@ app.register_blueprint(encurtar_bp)
 app.register_blueprint(redirect_bp)
 app.register_blueprint(stats_bp)
 
-app.run(port="9284", debug=True)
+app.run(port="9284")
