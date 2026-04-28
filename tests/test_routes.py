@@ -1,6 +1,7 @@
 import pytest
 import sqlite3
 from pathlib import Path
+from werkzeug.security import generate_password_hash
 
 
 @pytest.fixture
@@ -14,6 +15,11 @@ def test_db_path(tmp_path):
             code VARCHAR(30) NOT NULL UNIQUE,
             clicks INTEGER NOT NULL DEFAULT 0
         )""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username VARCHAR(50) NOT NULL UNIQUE,
+            password_hash VARCHAR(256) NOT NULL
+        )""")
     conn.commit()
     conn.close()
     return db_path
@@ -23,19 +29,27 @@ def test_db_path(tmp_path):
 def test_app(test_db_path, monkeypatch):
     import sys
     from pathlib import Path
+    from werkzeug.security import generate_password_hash
     
     from flask import Flask
     from flask_cors import CORS
     from source.routes.encurtar_route import encurtar_bp
     from source.routes.redirect_route import redirect_bp
+    from source.routes.auth_routes import auth_bp
+    from source.models import main_model, users_model
+    from source.auth import login_manager
     
     monkeypatch.chdir(Path(__file__).resolve().parent.parent.parent)
     
     app = Flask(__name__)
+    app.config["SECRET_KEY"] = "test-secret-key"
     CORS(app)
+    
+    login_manager.init_app(app)
     
     app.register_blueprint(encurtar_bp)
     app.register_blueprint(redirect_bp)
+    app.register_blueprint(auth_bp)
     
     app.config["TESTING"] = True
     
@@ -45,9 +59,26 @@ def test_app(test_db_path, monkeypatch):
 @pytest.fixture
 def client(test_app, test_db_path, monkeypatch):
     import source.models.main_model as main_model
+    import source.models.encurtar_model as encurtar_model
+    import source.models.users_model as users_model
+    
     monkeypatch.setattr(main_model, "BANCO_PATH", str(test_db_path))
+    monkeypatch.setattr(encurtar_model, "BANCO_PATH", str(test_db_path))
+    monkeypatch.setattr(users_model, "BANCO_PATH", str(test_db_path))
     
     with test_app.test_client() as client:
+        # Create test user and login
+        conn = sqlite3.connect(str(test_db_path))
+        conn.execute(
+            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+            ("testuser", generate_password_hash("testpass"))
+        )
+        conn.commit()
+        conn.close()
+        
+        # Login
+        client.post("/login", json={"username": "testuser", "password": "testpass"})
+        
         yield client
 
 
