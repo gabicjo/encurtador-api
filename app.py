@@ -1,6 +1,8 @@
+import os
 from flask import Flask
 from flask_cors import CORS
 from flasgger import Swagger
+from dotenv import load_dotenv
 from source.routes.encurtar_route import encurtar_bp
 from source.routes.redirect_route import redirect_bp
 from source.routes.stats_routes import stats_bp
@@ -9,7 +11,11 @@ from source.models.main_model import criar_tabela
 from source.models.users_model import criar_tabela_users
 from source.auth import login_manager
 
+load_dotenv()
+
 app = Flask(__name__)
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+
 CORS(app)
 Swagger(app)
 

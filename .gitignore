@@ -2,3 +2,4 @@ venv
 .vscode
 AGENTS.md
 **/__pycache__
+.env

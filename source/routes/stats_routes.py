@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-
+from flask_login import login_required
 from source import error_handler
 from source.services import stats_service
 
@@ -7,6 +7,7 @@ stats_bp = Blueprint("stats", __name__)
 
 
 @stats_bp.route("/stats/<code>", methods=["GET"])
+@login_required
 def get_url_stats(code: str):
     """
     Retorna estatísticas de uma URL encurtada.
