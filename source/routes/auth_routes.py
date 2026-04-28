@@ -65,6 +65,9 @@ def register():
         else:
             raise error_handler.SemURL("Username e password são obrigatórios")
     
+    except error_handler.SemURL as e:
+        return jsonify({"message": str(e)}), 400
+
     except error_handler.CodigoInvalido as e:
         return jsonify({"message": str(e)}), 400
 
