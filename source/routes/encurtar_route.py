@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from flask_login import login_required
 from source.services import encurtar_service
 from source import error_handler
 
@@ -17,6 +18,7 @@ def _get_base_url() -> str:
 
 
 @encurtar_bp.route("/encurtar", methods=["POST"])
+@login_required
 def generate_code():
     """
     Cria uma URL encurtada.
